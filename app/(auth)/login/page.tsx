@@ -16,12 +16,17 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, isLoggedIn } = useAuth();
 
-  const API_URL = 'http://4.240.104.190/';
+  const API_URL = 'https://amapi.amfoss.in/';
 
   useEffect(() => {
     const emailInStorage = localStorage.getItem('email');
     if (isLoggedIn && emailInStorage) {
-      router.push('/track');
+      const userRole = localStorage.getItem('userRole');
+      if (userRole === 'Mentor') {
+        router.push('/dashboard');
+      } else {
+        router.push('/track');
+      }
     } else {
       setLoading(false);
     }
@@ -61,21 +66,29 @@ export default function LoginPage() {
       }
 
       localStorage.setItem('email', user.email);
+      localStorage.setItem('name',user.name)
       const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1) as 'Mentee' | 'Mentor';
+      
+      localStorage.setItem('userRole', capitalizedRole);
+      
       login(capitalizedRole);
-      router.push('/track');
+      
+      if (capitalizedRole === 'Mentor') {
+        router.push('/dashboard');
+      } else {
+        router.push('/track');
+      }
     } catch (error) {
       console.error("Login failed", error);
       alert("Something went wrong during login.");
     }
   };
 
-  if (loading) return <div className="text-white text-center py-20">Loading...</div>;
+  if (loading) return <div className="loader"></div>;
 
   return (
     <div className="py-6 w-full max-w-lg relative z-10 mx-auto">
       <div className="space-y-6">
-        {/* Role Selector */}
         <div className="relative w-full">
           <button
             onClick={() => setOpen(!open)}

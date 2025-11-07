@@ -13,7 +13,7 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '@/app/context/authcontext';
 
-const API_URL = 'http://4.240.104.190/';
+const API_URL = 'https://amapi.amfoss.in/';
 
 const ProfilePage = () => {
   const { logout } = useAuth();
@@ -34,27 +34,38 @@ const ProfilePage = () => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail);
         setUser(data);
+        sessionStorage.setItem("cache_profile", JSON.stringify(data));
       } catch (err) {
         console.error('Failed to fetch user:', err);
         logout();
         router.push('/login');
       }
     };
-
-    fetchUser();
-  }, []);
+    
+    const cachedProfile = sessionStorage.getItem("cache_profile");
+    if (cachedProfile) {
+      setUser(JSON.parse(cachedProfile));
+    } else {
+      fetchUser();
+    }
+  }, [logout, router]);
 
   const handleLogout = () => {
     logout();
     router.push('/login');
   };
 
-  if (!user) return <div className="text-white p-10">Loading profile...</div>;
+  if (!user)
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-[#1E1E1E]">
+        <div className="loader"></div>
+      </div>
+    );
 
   const isMentor = user.role === 'mentor';
 
   return (
-    <div className="bg-[#1E1E1E] text-white px-6 py-10 min-h-screen font-sans">
+    <div className="bg-[#1E1E1E] text-white px-6 py-10 font-sans">
       <div className="max-w-6xl mx-auto space-y-10">
         <div className="flex flex-col md:flex-row items-center md:items-start bg-[#2a2a2a] rounded-lg p-8 md:p-10 gap-10 w-full shadow-md">
           <div className="flex flex-col items-center">
@@ -64,9 +75,6 @@ const ProfilePage = () => {
                 {user.name.charAt(0)}
               </div>
             </div>
-            <button className="mt-4 px-4 py-1 border border-gray-400 text-yellow-400 rounded-md text-sm hover:bg-yellow-400 hover:text-black transition">
-              Customise Profile
-            </button>
           </div>
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold">{user.name}</h1>
